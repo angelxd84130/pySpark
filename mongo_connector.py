@@ -1,5 +1,6 @@
 import pymongo
 import pandas as pd
+import pyspark.sql
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.appName('SparkByExamples.com').getOrCreate()
 
@@ -14,23 +15,23 @@ class ConnectToMongo:
                                           password=self._mongo_password, authSource="admin")
         self._db = self._client[self._mongo_db]
 
-    def get_db(self):
+    def get_db(self) -> object:
         return self._db
 
-    def query_db(self, pipeline, collection_name):
+    def query_db(self, pipeline, collection_name) -> list:
         cursor = self._db[collection_name].aggregate(pipeline)
         result = list(cursor)
         return result
 
 class CreateDataframe:
-    def __init__(self, pipeline, collection_name):
+    def __init__(self, pipeline: list, collection_name: str):
         self.result = ConnectToMongo().query_db(pipeline, collection_name)
 
-    def pandas_dataframe(self):
+    def pandas_dataframe(self) -> pd.DataFrame:
         df = pd.DataFrame(self.result)
         return df
 
-    def spark_dataframe(self):
+    def spark_dataframe(self) -> pyspark.sql.DataFrame:
         rdd = spark.sparkContext.parallelize(self.result)
         df = rdd.toDF()
         return df
